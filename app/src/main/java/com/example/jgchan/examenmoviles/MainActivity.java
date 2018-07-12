@@ -1,118 +1,162 @@
 package com.example.jgchan.examenmoviles;
 
-import android.content.Context;
-import android.graphics.Canvas;
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
+
+    String PATH="http://drink-app.tk/usuario/1/foto_perfil";
+    ImageView im;
+    Bitmap bi;
+    ProgressDialog mensaje;
+    Dibujar dib;
+    Button btn;
+    RelativeLayout canvas;
+    BitmapCache cache;
+    static BitmapLruCache cacheOtro;
+    ArrayList<Figura> listaFiguras;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(new Dibujar(this));
+        //dib=new Dibujar(this);
+
+
+        setContentView(R.layout.activity_main);
+        canvas = (RelativeLayout)findViewById(R.id.canvas);
+        btn = (Button)findViewById(R.id.btnEnviar);
+
+        cacheOtro = new BitmapLruCache();
+        Bitmap A =  BitmapFactory.decodeResource(getResources(), R.drawable.bominus1);
+        cacheOtro.put("1", A);
+
+        Bitmap B =  BitmapFactory.decodeResource(getResources(), R.drawable.bominus2);
+        cacheOtro.put("2", B);
+
+        listaFiguras = new ArrayList<Figura>();
+
+        listaFiguras.add(new Figura(100,50,20, Color.YELLOW));
+        listaFiguras.add(new Figura(400,50,40, Color.RED));
+        listaFiguras.add(new Figura(300,350,50, Color.BLUE));
+
+        dib = new Dibujar(this,canvas,cacheOtro,listaFiguras,"1");
+        canvas.addView(dib);
+
+
+
+
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Intent i = new Intent(MainActivity.this,PruebaBitmapCacheActivity.class);
+                startActivity(i);
+            }
+        });
+        //setContentView(new Dibujar(this));
+       // im=(ImageView)findViewById(R.id.imgPrueba);
+        //downloadFile(PATH);
+
+
+      //  getBitmapFromURL(PATH);
+
+      /*  try {
+           bi = Picasso.with(this).load(PATH).get();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+       // im.setImageBitmap(bi);
+
+        /*Picasso.with(this).load(PATH).into(new Target() {
+            @Override
+            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+               //dib.setBitmap(bitmap);
+                im.setImageBitmap(bitmap);
+                im.postInvalidate();
+            }
+
+            @Override
+            public void onBitmapFailed(Drawable errorDrawable) {
+                Log.d(TAG, "onBitmapFailed: ");
+            }
+
+            @Override
+            public void onPrepareLoad(Drawable placeHolderDrawable) {
+            }
+        });*/
     }
 
 
-    public class Dibujar extends View implements Runnable{
-        Drawable imagenActual;
-        Drawable [] imagenes;
-        int centrado=100;
-        int segundo=10;
-        double giroMinutero=0, giroHora;
-        int ancho=0, alto=0;
-        int s=0,m=0,h=0;
-
-        public Dibujar(Context context) {
-            super(context);
-            int[] nombres={
-                    R.drawable.caratura1,
-                    R.drawable.caratura2,
-                    R.drawable.caratura3,
-                    R.drawable.caratura4
-            };
-
-            imagenes = new Drawable[4];
-
-            for(int i =0; i<imagenes.length;i++){
-                //imagenes[i] = Drawable.createFromPath("../drawable"+nombres[i]);
-                imagenes[i] = context.getResources().getDrawable(nombres[i]);
-            }
-
-
-
-            Thread hilo = new Thread(this);
-            hilo.start();
+     public static Bitmap getBitmapFromURL(String src) {
+        try {
+            URL url = new URL(src);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            Bitmap myBitmap = BitmapFactory.decodeStream(input);
+            return myBitmap;
+        } catch (IOException e) {
+            // Log exception
+            return null;
         }
+    }
 
-
-        @Override
-        protected void onDraw(Canvas canvas) {
-            super.onDraw(canvas);
-
-            //int ancho,alto; // figura
-            this.ancho=canvas.getWidth(); //De la pantalla
-            this.alto=canvas.getHeight(); //De la pantalla
-
-
-
-
-
-            imagenes[0].setBounds((ancho/2)-imagenes[0].getIntrinsicWidth()+centrado,(alto/2)-imagenes[0].getIntrinsicWidth()+centrado, imagenes[0].getIntrinsicWidth()-centrado+(ancho/2),imagenes[0].getIntrinsicHeight()-centrado+(alto/2));
-            imagenes[0].draw(canvas);
-
-            imagenes[1].setBounds((ancho/2)-(imagenes[1].getIntrinsicWidth()-centrado),(alto/2)-(imagenes[1].getIntrinsicWidth()-centrado),imagenes[1].getIntrinsicWidth()+(ancho/2)-centrado,imagenes[1].getIntrinsicHeight()+(alto/2)-centrado);
-           imagenes[1].draw(canvas);
-
-
-
-            imagenes[3].setBounds((ancho/2)-(imagenes[3].getIntrinsicWidth()/2),(alto/2)-(imagenes[3].getIntrinsicWidth()/2),imagenes[3].getIntrinsicWidth()+(ancho/2)-(imagenes[3].getIntrinsicWidth()/2),imagenes[3].getIntrinsicHeight()+(alto/2)+(imagenes[3].getIntrinsicWidth()/2));
-            canvas.rotate((float)((h*30)+(.5*m)-180),(ancho/2),(alto/2));
-            imagenes[3].draw(canvas);
-
-
-            imagenes[2].setBounds((ancho/2)-(imagenes[2].getIntrinsicWidth()/2),(alto/2)-(imagenes[2].getIntrinsicWidth()/2),imagenes[2].getIntrinsicWidth()+(ancho/2)-(imagenes[2].getIntrinsicWidth()/2),imagenes[2].getIntrinsicHeight()+(alto/2)+(imagenes[2].getIntrinsicWidth()/2));
-            canvas.rotate((float)(6*m),(ancho/2),(alto/2));
-            imagenes[2].draw(canvas);
-
-
-
+    Bitmap bmImg;
+    void downloadFile(String fileUrl){
+        URL myFileUrl =null;
+        try {
+            myFileUrl= new URL(fileUrl);
+        } catch (MalformedURLException e) {
+// TODO Auto-generated catch block
+            e.printStackTrace();
         }
+        try {
+            HttpURLConnection conn= (HttpURLConnection)myFileUrl.openConnection();
+            conn.setDoInput(true);
+            conn.connect();
+            int length = conn.getContentLength();
+            int[] bitmapData =new int[length];
+            byte[] bitmapData2 =new byte[length];
+            InputStream is = conn.getInputStream();
 
-        @Override
-        public void run() {
+            bmImg = BitmapFactory.decodeStream(is);
+            im.setImageBitmap(bmImg);
+            Log.d("Descarga", "downloadFile: Termino");
 
-            while(true){
-
-                 try {
-                   s++;
-                   if(s>59){
-                      m++;
-                      s=0;
-                   }
-
-                     if(m>59) {
-                         h++;
-                         m=0;
-                     }
-
-                     if(h>12){
-                         h=0;
-                     }
-
-                    Thread.sleep(16);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                postInvalidate(); //Para Redibujar si se usan hilos
-            }
-
+        } catch (IOException e) {
+// TODO Auto-generated catch block
+            e.printStackTrace();
         }
+    }
+
+
+    public void otro(View v){
+        Intent i = new Intent(MainActivity.this,DeslizarActivity.class);
+        startActivity(i);
     }
 
 }
+
+
+
+
