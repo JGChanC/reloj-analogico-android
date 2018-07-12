@@ -57,11 +57,7 @@ public class Punto {
 		}
 
 
-		for (Punto punto : figura) {
-			if(Actual.y<=punto.y)
-				Actual=punto;
-
-		}
+		Actual = getPuntoMayor(figura);
 
 		reordenado.add(Actual);
 		figura.remove(Actual);
@@ -95,6 +91,25 @@ public class Punto {
 
 	}
 
+	public Punto getPuntoMayor(ArrayList<Punto> puntos) {
+		Punto Mayor = new Punto(0,0);
+		for (Punto punto : puntos) {
+			if(Mayor.y<=punto.y)
+				Mayor=punto;
+		}
+
+		return Mayor;
+	}
+
+	public Punto getPuntoMenor(ArrayList<Punto> puntos) {
+		Punto Menor = new Punto(100000,100000);
+		for (Punto punto : puntos) {
+			if(Menor.y>=punto.y)
+				Menor=punto;
+		}
+
+		return Menor;
+	}
 
 
 }
